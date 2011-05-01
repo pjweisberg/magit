@@ -77,7 +77,6 @@
 ;; magit core
 (require 'magit-key-mode)
 (require 'magit-bisect)
-(require 'magit-remotes)
 
 (eval-when-compile (require 'cl))
 (require 'log-edit)

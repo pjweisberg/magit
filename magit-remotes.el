@@ -1,3 +1,4 @@
+(require 'magit)
 (defvar magit-show-remotes-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "$") 'magit-display-process)
