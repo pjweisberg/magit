@@ -44,7 +44,9 @@
            (concat
             (cdr (assoc 'remote r))
             " ["
-            (cdr (assoc 'url r))
+            (propertize
+             (cdr (assoc 'url r))
+             'face 'magit-log-head-label-remote)
             "]")
            'remote (cdr (assoc 'remote r))))
         remotes
