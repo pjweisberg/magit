@@ -1902,21 +1902,21 @@ FUNC should leave point at the end of the modified region"
 
 (defmacro magit-define-command (sym arglist &rest body)
   "Macro to define a magit command.
-It will define the magit-SYM function having ARGLIST as argument.
-It will also define the magit-SYM-command-hook variable.
+It will define the SYM function having ARGLIST as argument.
+It will also define the SYM-command-hook variable.
 
-The defined function will call the function in the hook in
-order until one return non nil. If they all return nil then body will be called.
+The defined function will call the functions in the hook in
+order until one returns non-nil. If they all return nil then body will be called.
 
-It used to define hookable magit command: command defined by this
-function can be enriched by magit extension like magit-topgit and magit-svn"
+It is used to define a hookable magit command: command defined by this
+function can be enriched by magit extensions like magit-topgit and magit-svn"
   (declare (indent defun)
            (debug (&define name lambda-list 
                            [&optional stringp]        ; Match the doc string, if present.
                            [&optional ("interactive" interactive)]
                            def-body)))
-  (let ((fun (intern (format "magit-%s" sym)))
-        (hook (intern (format "magit-%s-command-hook" sym)))
+  (let ((fun sym)
+        (hook (intern (format "%s-command-hook" sym)))
         (doc (format "Command for `%s'." sym))
         (inter nil)
         (instr body))
@@ -3381,7 +3381,7 @@ to consider it or not when called with that buffer current."
         (magit-mode-init topdir 'status #'magit-refresh-status)
         (magit-status-mode t)))))
 
-(magit-define-command automatic-merge (revision)
+(magit-define-command magit-automatic-merge (revision)
   "Merge REVISION into the current 'HEAD'; commit unless merge fails.
 \('git merge REVISION')."
   (interactive (list (magit-read-rev "Merge" (magit-guess-branch))))
@@ -3499,7 +3499,7 @@ rev... maybe."
           t))
     nil))
 
-(magit-define-command checkout (revision)
+(magit-define-command magit-checkout (revision)
   "Switch 'HEAD' to REVISION and update working tree.
 Fails if working tree or staging area contain uncommitted changes.
 If REVISION is a remote branch, offer to create a local tracking branch.
@@ -3531,7 +3531,7 @@ If REVISION is a remote branch, offer to create a local tracking branch.
          (t cur-branch)))))
     (list branch parent)))
 
-(magit-define-command create-branch (branch parent)
+(magit-define-command magit-create-branch (branch parent)
   "Switch 'HEAD' to new BRANCH at revision PARENT and update working tree.
 Fails if working tree or staging area contain uncommitted changes.
 \('git checkout -b BRANCH REVISION')."
@@ -3670,7 +3670,7 @@ if any."
 
 ;;; Resetting
 
-(magit-define-command reset-head (revision &optional hard)
+(magit-define-command magit-reset-head (revision &optional hard)
   "Switch 'HEAD' to REVISION, keeping prior working tree and staging area.
 Any differences from REVISION become new changes to be committed.
 With prefix argument, all uncommitted changes in working tree
@@ -3688,7 +3688,7 @@ and staging area are lost.
 		   (magit-rev-to-git revision))
     (magit-update-vc-modeline default-directory)))
 
-(magit-define-command reset-head-hard (revision)
+(magit-define-command magit-reset-head-hard (revision)
   "Switch 'HEAD' to REVISION, losing all changes.
 Uncomitted changes in both working tree and staging area are lost.
 \('git reset --hard REVISION')."
@@ -3697,7 +3697,7 @@ Uncomitted changes in both working tree and staging area are lost.
 					 "HEAD"))))
   (magit-reset-head revision t))
 
-(magit-define-command reset-working-tree (&optional include-untracked)
+(magit-define-command magit-reset-working-tree (&optional include-untracked)
   "Revert working tree and clear changes from staging area.
 \('git reset --hard HEAD').
 
@@ -3847,12 +3847,12 @@ With a prefix arg, also remove untracked files."
 
 ;;; Updating, pull, and push
 
-(magit-define-command fetch (remote)
+(magit-define-command magit-fetch (remote)
   "Fetch from REMOTE."
   (interactive (list (magit-read-remote)))
   (apply 'magit-run-git-async "fetch" remote magit-custom-options))
 
-(magit-define-command fetch-current ()
+(magit-define-command magit-fetch-current ()
   "Run fetch for default remote.
 
 If there is no default remote, ask for one."
@@ -3860,12 +3860,12 @@ If there is no default remote, ask for one."
   (magit-fetch (or (magit-get-current-remote)
                    (magit-read-remote))))
 
-(magit-define-command remote-update ()
+(magit-define-command magit-remote-update ()
   "Update all remotes."
   (interactive)
   (apply 'magit-run-git-async "remote" "update" magit-custom-options))
 
-(magit-define-command pull ()
+(magit-define-command magit-pull ()
   "Run git pull against the current remote."
   (interactive)
   (let* ((branch (magit-get-current-branch))
@@ -3905,12 +3905,12 @@ typing and automatically refreshes the status buffer."
                           args)
                   nil nil nil t))))
 
-(magit-define-command push-tags ()
+(magit-define-command magit-push-tags ()
   "Push tags."
   (interactive)
   (magit-run-git-async "push" "--tags"))
 
-(magit-define-command push ()
+(magit-define-command magit-push ()
   (interactive)
   (let* ((branch (or (magit-get-current-branch)
 		     (error "Don't push a detached head.  That's gross")))
@@ -4243,7 +4243,7 @@ continue it.
 
 ;;; Tags
 
-(magit-define-command tag (name rev)
+(magit-define-command magit-tag (name rev)
   "Create a new lightweight tag with the given NAME at REV.
 \('git tag NAME')."
   (interactive
@@ -4252,7 +4252,7 @@ continue it.
     (magit-read-rev "Place tag on: " (or (magit-default-rev) "HEAD"))))
   (apply #'magit-run-git "tag" (append magit-custom-options (list name rev))))
 
-(magit-define-command annotated-tag (name rev)
+(magit-define-command magit-annotated-tag (name rev)
   "Start composing an annotated tag with the given NAME.
 Tag will point to the current 'HEAD'."
   (interactive
@@ -4291,7 +4291,7 @@ Tag will point to the current 'HEAD'."
 		     "Stashes:" 'magit-wash-stashes
 		     "stash" "list"))
 
-(magit-define-command stash (description)
+(magit-define-command magit-stash (description)
   "Create new stash of working tree and staging area named DESCRIPTION.
 Working tree and staging area revert to the current 'HEAD'.
 With prefix argument, changes in staging area are kept.
@@ -4299,7 +4299,7 @@ With prefix argument, changes in staging area are kept.
   (interactive "sStash description: ")
   (apply 'magit-run-git `("stash" "save" ,@magit-custom-options "--" ,description)))
 
-(magit-define-command stash-snapshot ()
+(magit-define-command magit-stash-snapshot ()
   "Create new stash of working tree and staging area; keep changes in place.
 \('git stash save \"Snapshot...\"; git stash apply stash@{0}')"
   (interactive)
@@ -4505,12 +4505,12 @@ With a non numeric prefix ARG, show all entries"
 (defvar magit-log-grep-buffer-name "*magit-grep-log*"
   "Buffer name for display of log grep results.")
 
-(magit-define-command log-ranged ()
+(magit-define-command magit-log-ranged ()
   (interactive)
   (magit-log t))
 (define-obsolete-function-alias 'magit-display-log-ranged 'magit-log-ranged)
 
-(magit-define-command log (&optional ask-for-range &rest extra-args)
+(magit-define-command magit-log (&optional ask-for-range &rest extra-args)
   (interactive)
   (let* ((log-range (if ask-for-range
                         (magit-read-rev-range "Log" "HEAD")
@@ -4525,11 +4525,11 @@ With a non numeric prefix ARG, show all entries"
     (magit-log-mode t)))
 (define-obsolete-function-alias 'magit-display-log 'magit-log)
 
-(magit-define-command log-long-ranged ()
+(magit-define-command magit-log-long-ranged ()
   (interactive)
   (magit-log-long t))
 
-(magit-define-command log-long (&optional ranged)
+(magit-define-command magit-log-long (&optional ranged)
   (interactive)
   (let* ((range (if ranged
 		    (magit-read-rev-range "Long log" "HEAD")
@@ -4569,7 +4569,7 @@ This is only non-nil in reflog buffers.")
   :lighter ()
   :keymap magit-reflog-mode-map)
 
-(magit-define-command reflog (&optional ask-for-range)
+(magit-define-command magit-reflog (&optional ask-for-range)
   (interactive)
   (let ((at (or (if ask-for-range
                     (magit-read-rev "Reflog of" (or (magit-guess-branch) "HEAD")))
@@ -4581,7 +4581,7 @@ This is only non-nil in reflog buffers.")
                        #'magit-refresh-reflog-buffer at args)
       (magit-reflog-mode t))))
 
-(magit-define-command reflog-ranged ()
+(magit-define-command magit-reflog-ranged ()
   (interactive)
   (magit-reflog t))
 
@@ -4661,7 +4661,7 @@ restore the window state that was saved before ediff was called."
   :lighter ()
   :keymap magit-diff-mode-map)
 
-(magit-define-command diff (range)
+(magit-define-command magit-diff (range)
   (interactive (list (magit-read-rev-range "Diff")))
   (if range
       (let* ((dir default-directory)
@@ -4672,7 +4672,7 @@ restore the window state that was saved before ediff was called."
           (magit-mode-init dir 'diff #'magit-refresh-diff-buffer range args)
           (magit-diff-mode t)))))
 
-(magit-define-command diff-working-tree (rev)
+(magit-define-command magit-diff-working-tree (rev)
   (interactive (list (magit-read-rev "Diff with" (magit-default-rev))))
   (magit-diff (or rev "HEAD")))
 
