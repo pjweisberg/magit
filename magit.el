@@ -541,6 +541,8 @@ Do not customize this (used in the `magit-key-mode' implementation).")
     (suppress-keymap map t)
     (define-key map (kbd "n") 'magit-goto-next-section)
     (define-key map (kbd "p") 'magit-goto-previous-section)
+    (define-key map (kbd "M-n") 'magit-goto-next-toplevel-section)
+    (define-key map (kbd "M-p") 'magit-goto-previous-toplevel-section)
     (define-key map (kbd "TAB") 'magit-toggle-section)
     (define-key map (kbd "<backtab>") 'magit-expand-collapse-section)
     (define-key map (kbd "1") 'magit-show-level-1)
@@ -1396,14 +1398,15 @@ end positions."
 
 (defun magit-find-section-after (pos)
   "Find the first section that begins after POS."
-  (magit-find-section-after* pos (list magit-top-section)))
+  (magit-find-section-after* pos (list magit-top-section) 'recursive))
 
-(defun magit-find-section-after* (pos secs)
-  "Find the first section that begins after POS in the list SECS
-\(including children of sections in SECS)."
+(defun magit-find-section-after* (pos secs &optional recursive)
+  "Find the first section that begins after POS in the list SECS.
+If RECURSIVE is non-nil, include children of sections in SECS."
   (while (and secs
               (<= (magit-section-beginning (car secs)) pos))
-    (setq secs (if (magit-section-hidden (car secs))
+    (setq secs (if (or (not recursive)
+                       (magit-section-hidden (car secs)))
                    (cdr secs)
                  (append (magit-section-children (car secs))
                          (cdr secs)))))
@@ -1508,6 +1511,24 @@ see `magit-insert-section' for meaning of the arguments"
   (if (eq (point) 1)
       (message "No previous section")
     (magit-goto-section (magit-find-section-before (point)))))
+
+(defun magit-goto-next-toplevel-section ()
+  "Go to the next top-level Magit section.
+Top-level sections are children of `magit-top-section'."
+  (interactive)
+  (let ((next (magit-find-section-after* (point) (magit-section-children magit-top-section))))
+    (if next
+        (magit-goto-section next)
+      (message "No next top-level section"))))
+
+(defun magit-goto-previous-toplevel-section ()
+  "Go to the previous top-level Magit section.
+Top-level sections are children of `magit-top-section'."
+  (interactive)
+  (let ((prev (magit-find-section-before* (point) (magit-section-children magit-top-section))))
+    (if prev
+        (magit-goto-section prev)
+      (message "No previous top-level section"))))
 
 (defun magit-goto-parent-section ()
   "Go to the parent section."
