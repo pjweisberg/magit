@@ -1498,45 +1498,97 @@ see `magit-insert-section' for meaning of the arguments"
 	 magit-git-executable
 	 (append magit-git-standard-options args)))
 
-(defun magit-goto-next-section ()
+(defun magit-goto-next-section (&optional count)
   "Go to the next Magit section."
-  (interactive)
-  (let ((next (magit-find-section-after (point))))
-    (if next
-        (magit-goto-section next)
-      (message "No next section"))))
+  (interactive "p")
+  (or count (setq count 1))
+  (if (< count 0)
+      (magit-goto-previous-section (- count)))
+  (let ((target nil)
+        (current-location (point)))
+    (while (> count 0)
+      (let ((next (magit-find-section-after current-location)))
+        (if next
+            (setq target next
+                  current-location (magit-section-beginning next)
+                  count (- count 1))
+          (message "No next section")
+          (setq count 0))))
+    (if target
+        (magit-goto-section target))))
 
-(defun magit-goto-previous-section ()
+(defun magit-goto-previous-section (&optional count)
   "Go to the previous Magit section."
-  (interactive)
-  (if (eq (point) 1)
-      (message "No previous section")
-    (magit-goto-section (magit-find-section-before (point)))))
+  (interactive "p")
+  (or count (setq count 1))
+  (if (< count 0)
+      (magit-goto-next-section (- count)))
+  (let ((target nil)
+        (current-location (point)))
+    (while (> count 0)
+      (let ((prev (magit-find-section-before current-location)))
+        (if prev
+            (setq target prev
+                  current-location (magit-section-beginning prev)
+                  count (- count 1))
+          (message "No previous section")
+          (setq count 0))))
+    (if target
+        (magit-goto-section target))))
 
-(defun magit-goto-next-toplevel-section ()
+(defun magit-goto-next-toplevel-section (&optional count)
   "Go to the next top-level Magit section.
 Top-level sections are children of `magit-top-section'."
-  (interactive)
-  (let ((next (magit-find-section-after* (point) (magit-section-children magit-top-section))))
-    (if next
-        (magit-goto-section next)
-      (message "No next top-level section"))))
+  (interactive "p")
+  (or count (setq count 1))
+  (if (< count 0)
+      (magit-goto-previous-toplevel-section (- count)))
+  (let ((target nil)
+        (current-location (point)))
+    (while (> count 0)
+      (let ((next (magit-find-section-after* current-location (magit-section-children magit-top-section))))
+        (if next
+            (setq target next
+                  current-location (magit-section-beginning next)
+                  count (- count 1))
+          (message "No next top-level section")
+          (setq count 0))))
+    (if target
+        (magit-goto-section target))))
 
-(defun magit-goto-previous-toplevel-section ()
+(defun magit-goto-previous-toplevel-section (&optional count)
   "Go to the previous top-level Magit section.
 Top-level sections are children of `magit-top-section'."
-  (interactive)
-  (let ((prev (magit-find-section-before* (point) (magit-section-children magit-top-section))))
-    (if prev
-        (magit-goto-section prev)
-      (message "No previous top-level section"))))
+  (interactive "p")
+  (or count (setq count 1))
+  (if (< count 0)
+      (magit-goto-next-toplevel-section (- count)))
+  (let ((target nil)
+        (current-location (point)))
+    (while (> count 0)
+      (let ((prev (magit-find-section-before* current-location (magit-section-children magit-top-section))))
+        (if prev
+            (setq target prev
+                  current-location (magit-section-beginning prev)
+                  count (- count 1))
+          (message "No previous top-level section")
+          (setq count 0))))
+    (if target
+        (magit-goto-section target))))
 
-(defun magit-goto-parent-section ()
+(defun magit-goto-parent-section (&optional count)
   "Go to the parent section."
-  (interactive)
-  (let ((parent (magit-section-parent (magit-current-section))))
-    (when parent
-      (goto-char (magit-section-beginning parent)))))
+  (interactive "p")
+  (or count (setq count 1))
+  (let ((target (magit-current-section)))
+    (while (> count 0)
+      (let ((next (magit-section-parent target)))
+        (if next
+            (setq target next
+                  count (- count 1))
+          (message "No parent section")
+          (setq count 0))))
+    (magit-goto-section target)))
 
 (defun magit-goto-section (section)
   (goto-char (magit-section-beginning section))
